@@ -39,7 +39,7 @@ let TaskForm = {
                 return
             }
 
-            bus.$emit('task:added',{id:Date.now(),body:this.body,done:false})
+            this.$emit('task:added',{id:Date.now(),body:this.body,done:false})
 
             this.body = null
         }
@@ -64,7 +64,7 @@ let Tasks = {
                 </template>
                 <span v-else>No tasks</span>
             </div>
-            <task-form></task-form>
+            <task-form v-on:task:added="addTask"></task-form>
         </div>
     `,
 
@@ -82,6 +82,10 @@ let Tasks = {
             this.tasks = this.tasks.filter((task)=>{
                 return task.id !== taskId
             })
+        },
+
+        addTask(task){
+            this.tasks.unshift(task)
         }
 
     },
@@ -96,10 +100,6 @@ let Tasks = {
             this.deleteTask(taskId)
         })
 
-        bus.$on('task:added',(task)=>{
-           console.log(task)
-            this.tasks.unshift(task)
-        })
     }
 }
 
