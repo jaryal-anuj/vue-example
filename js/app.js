@@ -21,17 +21,40 @@ let Task = {
     }
 }
 
+let TaskForm = {
+    data(){
+        return {
+            body:null
+        }
+    },
+    template:`
+        <form action="#" @submit.prevent="addTask">
+            <input type="text" v-model.trim="body"/>
+            <button>Add task</button>
+        </form>
+    `,
+    methods:{
+        addTask(){
+            if(!this.body){
+                return
+            }
+
+            bus.$emit('task:added',{id:Date.now(),body:this.body,done:false})
+
+            this.body = null
+        }
+    }
+}
+
 let Tasks = {
     data(){
         return {
-            tasks:[
-               {id:1,body:'Task one', done:true},
-               {id:2,body:'Task two', done:true}
-            ]
+            tasks:[]
         }
     },
     components:{
-        'task':Task
+        'task':Task,
+        'task-form':TaskForm
     },
     template:`
         <div>
@@ -41,9 +64,7 @@ let Tasks = {
                 </template>
                 <span v-else>No tasks</span>
             </div>
-            <form>
-                Form
-            </form>
+            <task-form></task-form>
         </div>
     `,
 
@@ -73,6 +94,11 @@ let Tasks = {
         bus.$on('task:deleted',(taskId)=>{
            
             this.deleteTask(taskId)
+        })
+
+        bus.$on('task:added',(task)=>{
+           console.log(task)
+            this.tasks.unshift(task)
         })
     }
 }
