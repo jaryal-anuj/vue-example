@@ -6,9 +6,47 @@
     </head>
     <body>
         <div id="app">
-            <tasks></tasks>
+            <editor></editor>
         </div>
         <script src="js/vue.js"></script>
-        <script src="js/app.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script>
+
+            let Preview = {
+                props:['text'],
+                template:`
+                    <div class="editor__preview" v-html="markdownText"> </div>
+                `,
+                computed:{
+                    markdownText(){
+                        return marked(this.text, {sanitize:true})
+                    }
+                }
+            }
+
+            let Editor = {
+                components:{
+                    'preview':Preview
+                },
+                data(){
+                    return{
+                        text:''
+                    }
+                },
+                template:`
+                    <div class="editor">
+                        <textarea name="" id="" cols="30" rows="10" v-model="text" class="editor__input"></textarea>
+                        <preview :text="text"></preview>
+                    </div>
+                `
+            }
+
+            let app = new Vue({
+                el:"#app",
+                components:{
+                    'editor':Editor
+                }
+            })
+        </script>
     </body>
 </html>
