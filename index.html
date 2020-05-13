@@ -20,6 +20,34 @@
         <script src="js/axios.min.js"></script>
         <script src="questions.js"></script>
         <script>
+            let Results = {
+                props:['answeredQuestions'],
+                template:`
+                    <div class="results">
+                        <h2>Results</h2>
+                        <p>You got {{correctAnswerCount()}} out of {{ answeredQuestions.length }} questions correct</p>
+                        <div class="result__item" v-for="answered in answeredQuestions">
+                            <h3>{{ answered.question.title }}</h3>
+                            <p>Your answer : <span :class="{'danger':!answered.answer.correct, 'success':answered.answer.correct}">{{ answered.answer.title }}</span></p>
+                            <p v-if="!answered.answer.correct">
+                                Correct Answer : {{ getCorrectAnswerFromQuestion(answered.question).title }}
+                            </p>
+                        </div>
+                    </div>
+                `,
+                methods:{
+                    getCorrectAnswerFromQuestion(question){
+                        return question.answers.find((answer)=>{
+                            return answer.correct ===true
+                        })
+                    },
+                    correctAnswerCount(){
+                        return this.answeredQuestions.filter((answered)=>{
+                            return answered.answer.correct === true;
+                        }).length;
+                    }
+                }
+            }
             let Answer = {
                 props:['answer'],
                 template:`
@@ -76,7 +104,8 @@
 
             let Quiz = {
                 components:{
-                    'question':Question
+                    'question':Question,
+                    'results':Results
 
                 },
                 data(){
@@ -91,6 +120,7 @@
                 template:`
                     <div class="quiz">
                         <template v-if="showResults">
+                            <results :answered-questions="answeredQuestions"></results>
                         </template>
                         <template v-else>
                             <h4>Question {{ currentQuestionNumber }} of {{ questions.length }}</h4>
