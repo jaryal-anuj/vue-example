@@ -25,10 +25,15 @@
                 template:`
                     <div class="answer">
                         <label :for="'answer-'+answer.id">
-                            <input type="radio" :id="'answer-'+answer.id" name="answer" /> {{ answer.title}}   
+                            <input type="radio" :id="'answer-'+answer.id" name="answer" @click="choose(answer)"/> {{ answer.title}}   
                         </label>
                     </div>
                 `,
+                methods:{
+                    choose(answer){
+                        this.$emit('answer:chosen',answer)
+                    }
+                }
             }
             let Question = {
                 props:[
@@ -37,12 +42,35 @@
                 components:{
                     'answer':Answer
                 },
+                data(){
+                    return{
+                        showNext:false,
+                        answerChosen:null
+                    }
+                },
                 template:`
                     <div class="question">
                         <h3>{{ question.title }}</h3>
-                        <answer v-for="answer in question.answers" :answer="answer" :key="answer.id"></answer>
+                        <answer 
+                            v-for="answer in question.answers" 
+                            :answer="answer" 
+                            :key="answer.id"
+                            v-on:answer:chosen="checkAnswer"
+                        ></answer>
+                        <button v-if="showNext" @click.prevent="nextQuestion">Next</button>
                     </div>
                 `,
+                methods:{
+                    checkAnswer(answer){
+                        this.showNext = true
+                        this.answerChosen = answer
+                        
+                    },
+
+                    nextQuestion(){
+                        this.$emit('question:answered', this.question, this.answerChosen)
+                    }
+                }
             }
 
             let Quiz = {
@@ -53,24 +81,33 @@
                 data(){
                     return {
                         questions:[],
-                        currentQuestion:null
+                        currentQuestion:null,
+                        answeredQuestions:[]
                     }
                 },
                 template:`
                     <div class="quiz">
                         <h4>Question x of y</h4>
-                        <question v-if="currentQuestion" :question="currentQuestion"></question>
+                        <question 
+                            v-if="currentQuestion" 
+                            :question="currentQuestion"
+                            v-on:question:answered="storeAnswer"
+                        ></question>
                         
                     </div>
                 `,
                 mounted(){
-                   
-                    // axios.get('questions.json').then((response)=>{
-                    //     this.questions = response.data
-                    // })
+
                     this.questions = questions
-                    console.log(this.questions[0].title)
                     this.currentQuestion = this.questions[0]
+                },
+                methods:{
+                    storeAnswer(question,answer){
+                        this.answeredQuestions.push({
+                            'question':question,
+                            'answer':answer
+                        })
+                    }
                 }
             }
 
