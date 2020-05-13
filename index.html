@@ -8,61 +8,127 @@
     </head>
     <body>
         <div id="app">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-6 offset-md-3">
-                        
-                        <login></login>
-                    </div>
-                </div>
-            </div>
-            
+            <notes></notes>  
         </div>
         <script src="js/vue.js"></script>
-        
-        <script src="js/people.js"></script>
+        <script src="js/pluralize.min.js"></script>
+        <script src="js/lodash.js"></script>
+  
         <script>
-            const formError = {
-                email:['Please enter valid email'],
-                password:['Please enter valid password']
-            }
-            let Login = {
+
+            let Editor = {
+                props:['noteObject'],
                 data(){
                     return {
-                        form:{
-                            email:'',
-                            password:''
-                        },
-                        errors:{}
+                        note:this.noteObject
                     }
                 },
                 template:`
-                    <form action="#" @submit.prevent="submit">
-                        <div class="form-group" :class="{ 'has-danger':errors.email }">
-                            <label for="email" class="form-control-label">Email</label>
-                            <input type="text" id="email" class="form-control" v-model="form.email"/>
-                            <div class="form-control-feedback" v-if="errors.email">{{ errors.email[0] }}</div>
-                        </div>
-                        <div class="form-group" :class="{ 'has-danger':errors.password }">
-                            <label for="password" class="form-control-label">Password</label>
-                            <input type="password" id="password" class="form-control"  v-model="form.password"/>
-                            <div class="form-control-feedback" v-if="errors.password">{{ errors.password[0] }}</div>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">Login</button>    
-                    </form>
+                    <textarea class="form-control"  rows="5" placeholder="Write a note" v-model="note.body" @input="update"></textarea>
                 `,
                 methods:{
-                    submit(){
-                        this.errors=formError
+                    update(){
+                        this.$emit('update')
                     }
                 }
             }
 
+            let Note = {
+                props:['noteObject'],
+                data(){
+                    return {
+                        open:false,
+                        note:this.noteObject
+                    }
+                },
+                components:{
+                    'editor':Editor
+                },
+                computed:{
+                    wordCount(){
+                        if(!this.note.body.trim()){
+                            return '0 words'
+                        }
+
+                        let wordCount = this.note.body.trim().split(' ').length
+                        return wordCount+' '+pluralize('word', wordCount)
+                    }
+                },
+                template:`
+                    <div class="note__wrapper">
+                        <div class="note__header">
+                            <a href="#" class="note btn btn-success" style="width: 86%;" @click.prevent="open = !open">
+                                <span style="float:left">{{ _.truncate(note.body,{length:30}) || 'Empty note' }}</span>
+                                <span style="float:right">{{ wordCount }} </span>
+                            </a>
+                            <a href="#" class="note__delete btn btn-danger" v-if="open" @click.prevent="deleteNote">Delete note</a>
+                        </div>
+                        <editor v-if="open" :note-object="note" v-on:update="saveNote"></editor>
+                    </div>
+                `,
+                methods:{
+                    saveNote(){
+                        let notes=JSON.parse(localStorage.getItem('notes'))||[]
+
+                        notes.map((note)=>{
+                            if(note.id === this.note.id){
+                                note.body = this.note.body
+                            }
+                        })
+
+                        localStorage.setItem('notes', JSON.stringify(notes))
+                    },
+                    //pluralize:pluralize
+                    deleteNote(){
+                        this.$emit('delete', this.note.id)
+                    }
+                }
+            }
+ 
+            let Notes = {
+                data(){
+                    return {
+                        notes:JSON.parse(localStorage.getItem('notes'))||[]
+                    }
+                },
+                components:{
+                    'note':Note
+                },
+                template:`
+                   <div class="notes">
+                        <a class="notes__new btn btn-primary" style="width: 100%;" href="#" @click.prevent="newNote">
+                            Create a new note
+                        </a>
+                        <note 
+                            v-for="note in notes" 
+                            :note-object="note" 
+                            :key="note.id"
+                            v-on:delete="deleteNote"
+                        ></note>
+                    </div> 
+                `,
+                methods:{
+                    newNote(){
+                        this.notes.unshift({
+                            id:Date.now(),
+                            body:''
+                        })
+
+                        localStorage.setItem('notes', JSON.stringify(this.notes))
+                    },
+                    deleteNote(id){
+                       
+                        this.notes = this.notes.filter((note)=>{
+                            return note.id !== id
+                        })
+                        localStorage.setItem('notes', JSON.stringify(this.notes))
+                    }
+                }
+            }
             let app = new Vue({
                 el:"#app",
                 components:{
-                    'login':Login
+                    'notes':Notes
                 }
             })
         </script>
