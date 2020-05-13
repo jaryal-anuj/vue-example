@@ -14,161 +14,79 @@
     </head>
     <body>
         <div id="app">
-            <quiz></quiz>
+            <people></people>
         </div>
         <script src="js/vue.js"></script>
-        <script src="js/axios.min.js"></script>
-        <script src="questions.js"></script>
+        
+        <script src="js/people.js"></script>
         <script>
-            let Results = {
-                props:['answeredQuestions'],
-                template:`
-                    <div class="results">
-                        <h2>Results</h2>
-                        <p>You got {{correctAnswerCount()}} out of {{ answeredQuestions.length }} questions correct</p>
-                        <div class="result__item" v-for="answered in answeredQuestions">
-                            <h3>{{ answered.question.title }}</h3>
-                            <p>Your answer : <span :class="{'danger':!answered.answer.correct, 'success':answered.answer.correct}">{{ answered.answer.title }}</span></p>
-                            <p v-if="!answered.answer.correct">
-                                Correct Answer : {{ getCorrectAnswerFromQuestion(answered.question).title }}
-                            </p>
-                        </div>
-                    </div>
-                `,
-                methods:{
-                    getCorrectAnswerFromQuestion(question){
-                        return question.answers.find((answer)=>{
-                            return answer.correct ===true
-                        })
-                    },
-                    correctAnswerCount(){
-                        return this.answeredQuestions.filter((answered)=>{
-                            return answered.answer.correct === true;
-                        }).length;
-                    }
-                }
-            }
-            let Answer = {
-                props:['answer'],
-                template:`
-                    <div class="answer">
-                        <label :for="'answer-'+answer.id">
-                            <input type="radio" :id="'answer-'+answer.id" name="answer" @click="choose(answer)"/> {{ answer.title}}   
-                        </label>
-                    </div>
-                `,
-                methods:{
-                    choose(answer){
-                        this.$emit('answer:chosen',answer)
-                    }
-                }
-            }
-            let Question = {
-                props:[
-                    'question'
-                ],
-                components:{
-                    'answer':Answer
-                },
+            let Search = {
                 data(){
                     return{
-                        showNext:false,
-                        answerChosen:null
+                        query:''
                     }
                 },
                 template:`
-                    <div class="question">
-                        <h3>{{ question.title }}</h3>
-                        <answer 
-                            v-for="answer in question.answers" 
-                            :answer="answer" 
-                            :key="answer.id"
-                            v-on:answer:chosen="answerClicked"
-                        ></answer>
-                        <button v-if="showNext" @click.prevent="nextQuestion">Next</button>
-                    </div>
+                    <input type="search" v-model="query" @input="changed" ref="search"/>
                 `,
                 methods:{
-                    answerClicked(answer){
-                        this.showNext = true
-                        this.answerChosen = answer
-                        
-                    },
-
-                    nextQuestion(){
-                        this.showNext= false
-                        this.$emit('question:answered', this.question, this.answerChosen)
+                    changed(){
+                        //this.$emit('input',this.$refs.search.value)
+                        this.$emit('input',this.query)
                     }
                 }
             }
-
-            let Quiz = {
-                components:{
-                    'question':Question,
-                    'results':Results
-
-                },
+            let People = {
                 data(){
                     return {
-                        questions:[],
-                        currentQuestion:null,
-                        answeredQuestions:[],
-                        currentQuestionNumber:1,
-                        showResults:false
+                        people:[],
+                        query:''
                     }
+                },
+                components:{
+                    'search':Search
                 },
                 template:`
-                    <div class="quiz">
-                        <template v-if="showResults">
-                            <results :answered-questions="answeredQuestions"></results>
-                        </template>
-                        <template v-else>
-                            <h4>Question {{ currentQuestionNumber }} of {{ questions.length }}</h4>
-                            <question 
-                                v-if="currentQuestion" 
-                                :question="currentQuestion"
-                                v-on:question:answered="answered"
-                            ></question>
-                        </template>
-                        
+                    <div class="people">
+                        <search v-model="query"></search>
+                        <table v-if="people.length">
+                            <thead>
+                                <th><td>ID</td></th>
+                                <th><td>Name</td></th>
+                                <th><td>Username</td></th>
+                                <th><td>Email</td></th>
+
+                            </thead>   
+                            <tbody>
+                                <tr v-for="person in filteredPeople">
+                                    <td> {{ person.id }}</td>
+                                    <td> {{ person.name }}</td>
+                                    <td> {{ person.username }}</td>
+                                    <td> {{ person.email }}</td>
+                                </tr>
+                            </tbody> 
+                        </table>
+                        <p v-else> No result found</p>
                     </div>
                 `,
-                mounted(){
-
-                    this.questions = questions
-                    this.currentQuestion = this.questions[0]
-                },
-                methods:{
-                    answered(question,answer){
-                        this.storeAnswer(question, answer)
-                        this.setNextQuestion()
-                    },
-
-                    storeAnswer(question,answer){
-                        this.answeredQuestions.push({
-                            'question':question,
-                            'answer':answer
+                computed:{
+                    filteredPeople() {
+                        return this.people.filter((row)=>{
+                            return Object.keys(row).some((key)=>{
+                                return String(row[key]).indexOf(this.query) > -1
+                            })
                         })
-                    },
-
-                    setNextQuestion(question,answer){
-                        if(this.allQuestionsAnswered()){
-                            this.showResults = true
-                            return
-                        }
-                        this.currentQuestionNumber++
-                        this.currentQuestion = this.questions[this.currentQuestionNumber-1]
-                    },
-                    allQuestionsAnswered(){
-                        return this.currentQuestionNumber ===this.questions.length
                     }
+                },
+                mounted(){
+                    this.people = people
                 }
             }
 
             let app = new Vue({
                 el:"#app",
                 components:{
-                   'quiz':Quiz
+                   'people':People
                 }
             })
         </script>
