@@ -55,19 +55,20 @@
                             v-for="answer in question.answers" 
                             :answer="answer" 
                             :key="answer.id"
-                            v-on:answer:chosen="checkAnswer"
+                            v-on:answer:chosen="answerClicked"
                         ></answer>
                         <button v-if="showNext" @click.prevent="nextQuestion">Next</button>
                     </div>
                 `,
                 methods:{
-                    checkAnswer(answer){
+                    answerClicked(answer){
                         this.showNext = true
                         this.answerChosen = answer
                         
                     },
 
                     nextQuestion(){
+                        this.showNext= false
                         this.$emit('question:answered', this.question, this.answerChosen)
                     }
                 }
@@ -82,16 +83,17 @@
                     return {
                         questions:[],
                         currentQuestion:null,
-                        answeredQuestions:[]
+                        answeredQuestions:[],
+                        currentQuestionNumber:1
                     }
                 },
                 template:`
                     <div class="quiz">
-                        <h4>Question x of y</h4>
+                        <h4>Question {{ currentQuestionNumber }} of {{ questions.length }}</h4>
                         <question 
                             v-if="currentQuestion" 
                             :question="currentQuestion"
-                            v-on:question:answered="storeAnswer"
+                            v-on:question:answered="answered"
                         ></question>
                         
                     </div>
@@ -102,11 +104,21 @@
                     this.currentQuestion = this.questions[0]
                 },
                 methods:{
+                    answered(question,answer){
+                        this.storeAnswer(question, answer)
+                        this.setNextQuestion()
+                    },
+
                     storeAnswer(question,answer){
                         this.answeredQuestions.push({
                             'question':question,
                             'answer':answer
                         })
+                    },
+
+                    setNextQuestion(question,answer){
+                        this.currentQuestionNumber++
+                        this.currentQuestion = this.questions[this.currentQuestionNumber-1]
                     }
                 }
             }
