@@ -3,90 +3,66 @@
         <meta charset="UTF-8"> 
         <title>Quiz</title>
         <link rel="stylesheet" href="css/app.css">
-        <style>
-            .danger{
-                color:red;
-            }
-            .success{
-                color:green;
-            }
-        </style>
+        <link rel="stylesheet" href="css/bootstrap.min.css">
+        
     </head>
     <body>
         <div id="app">
-            <people></people>
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 offset-md-3">
+                        
+                        <login></login>
+                    </div>
+                </div>
+            </div>
+            
         </div>
         <script src="js/vue.js"></script>
         
         <script src="js/people.js"></script>
         <script>
-            let Search = {
-                data(){
-                    return{
-                        query:''
-                    }
-                },
-                template:`
-                    <input type="search" v-model="query" @input="changed" ref="search"/>
-                `,
-                methods:{
-                    changed(){
-                        //this.$emit('input',this.$refs.search.value)
-                        this.$emit('input',this.query)
-                    }
-                }
+            const formError = {
+                email:['Please enter valid email'],
+                password:['Please enter valid password']
             }
-            let People = {
+            let Login = {
                 data(){
                     return {
-                        people:[],
-                        query:''
+                        form:{
+                            email:'',
+                            password:''
+                        },
+                        errors:{}
                     }
-                },
-                components:{
-                    'search':Search
                 },
                 template:`
-                    <div class="people">
-                        <search v-model="query"></search>
-                        <table v-if="people.length">
-                            <thead>
-                                <th><td>ID</td></th>
-                                <th><td>Name</td></th>
-                                <th><td>Username</td></th>
-                                <th><td>Email</td></th>
-
-                            </thead>   
-                            <tbody>
-                                <tr v-for="person in filteredPeople">
-                                    <td> {{ person.id }}</td>
-                                    <td> {{ person.name }}</td>
-                                    <td> {{ person.username }}</td>
-                                    <td> {{ person.email }}</td>
-                                </tr>
-                            </tbody> 
-                        </table>
-                        <p v-else> No result found</p>
-                    </div>
+                    <form action="#" @submit.prevent="submit">
+                        <div class="form-group" :class="{ 'has-danger':errors.email }">
+                            <label for="email" class="form-control-label">Email</label>
+                            <input type="text" id="email" class="form-control" v-model="form.email"/>
+                            <div class="form-control-feedback" v-if="errors.email">{{ errors.email[0] }}</div>
+                        </div>
+                        <div class="form-group" :class="{ 'has-danger':errors.password }">
+                            <label for="password" class="form-control-label">Password</label>
+                            <input type="password" id="password" class="form-control"  v-model="form.password"/>
+                            <div class="form-control-feedback" v-if="errors.password">{{ errors.password[0] }}</div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Login</button>    
+                    </form>
                 `,
-                computed:{
-                    filteredPeople() {
-                        return this.people.filter((row)=>{
-                            return Object.keys(row).some((key)=>{
-                                return String(row[key]).indexOf(this.query) > -1
-                            })
-                        })
+                methods:{
+                    submit(){
+                        this.errors=formError
                     }
-                },
-                mounted(){
-                    this.people = people
                 }
             }
 
             let app = new Vue({
                 el:"#app",
                 components:{
-                   'people':People
+                    'login':Login
                 }
             })
         </script>
