@@ -1,50 +1,83 @@
 <html>
     <head>
         <meta charset="UTF-8"> 
-        <title>Task list</title>
+        <title>Quiz</title>
         <link rel="stylesheet" href="css/app.css">
+        <style>
+            .danger{
+                color:red;
+            }
+            .success{
+                color:green;
+            }
+        </style>
     </head>
     <body>
         <div id="app">
-            <editor></editor>
+            <quiz></quiz>
         </div>
         <script src="js/vue.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <script src="js/axios.min.js"></script>
+        <script src="questions.js"></script>
         <script>
-
-            let Preview = {
-                props:['text'],
+            let Answer = {
+                props:['answer'],
                 template:`
-                    <div class="editor__preview" v-html="markdownText"> </div>
+                    <div class="answer">
+                        <label :for="'answer-'+answer.id">
+                            <input type="radio" :id="'answer-'+answer.id" name="answer" /> {{ answer.title}}   
+                        </label>
+                    </div>
                 `,
-                computed:{
-                    markdownText(){
-                        return marked(this.text, {sanitize:true})
-                    }
-                }
+            }
+            let Question = {
+                props:[
+                    'question'
+                ],
+                components:{
+                    'answer':Answer
+                },
+                template:`
+                    <div class="question">
+                        <h3>{{ question.title }}</h3>
+                        <answer v-for="answer in question.answers" :answer="answer" :key="answer.id"></answer>
+                    </div>
+                `,
             }
 
-            let Editor = {
+            let Quiz = {
                 components:{
-                    'preview':Preview
+                    'question':Question
+
                 },
                 data(){
-                    return{
-                        text:''
+                    return {
+                        questions:[],
+                        currentQuestion:null
                     }
                 },
                 template:`
-                    <div class="editor">
-                        <textarea name="" id="" cols="30" rows="10" v-model="text" class="editor__input"></textarea>
-                        <preview :text="text"></preview>
+                    <div class="quiz">
+                        <h4>Question x of y</h4>
+                        <question v-if="currentQuestion" :question="currentQuestion"></question>
+                        
                     </div>
-                `
+                `,
+                mounted(){
+                   
+                    // axios.get('questions.json').then((response)=>{
+                    //     this.questions = response.data
+                    // })
+                    this.questions = questions
+                    console.log(this.questions[0].title)
+                    this.currentQuestion = this.questions[0]
+                }
             }
 
             let app = new Vue({
                 el:"#app",
                 components:{
-                    'editor':Editor
+                   'quiz':Quiz
                 }
             })
         </script>
